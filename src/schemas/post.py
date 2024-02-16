@@ -2,10 +2,10 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from src.schemas.base import BaseOutSchema
+from src.schemas.base import BaseOutSchema, OptionalBaseSchema
 
 
-class PostInSchema(BaseModel):
+class PostInSchema(OptionalBaseSchema):
     """
     Схема для добавления нового поста
     """
@@ -13,7 +13,9 @@ class PostInSchema(BaseModel):
     title: str = Field(max_length=80)
     text: str = Field(max_length=140)
 
-    model_config = ConfigDict(from_attributes=True)
+
+# Схема для обновления поста (patch-запрос, поля не обязательные)
+PostInOptionalSchema = PostInSchema.all_optional('PostInOptionalSchema')
 
 
 class PostOutSchema(BaseOutSchema, PostInSchema):

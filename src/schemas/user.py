@@ -2,18 +2,22 @@ from typing import List
 
 from pydantic import BaseModel, Field, ConfigDict
 
-from src.schemas.base import BaseOutSchema
+from src.schemas.base import BaseOutSchema, OptionalBaseSchema
+
+
 # from src.schemas.blog import BlogOutSchema
 
 
-class UserInSchema(BaseModel):
+class UserInSchema(OptionalBaseSchema):
     """
     Схема для добавления нового пользователя
     """
 
     username: str = Field(max_length=60)
 
-    model_config = ConfigDict(from_attributes=True)
+
+# Схема для обновления пользователя (patch-запрос, поля не обязательные)
+UserInOptionalSchema = UserInSchema.all_optional('UserInOptionalSchema')
 
 
 class UserOutSchema(BaseOutSchema, UserInSchema):
