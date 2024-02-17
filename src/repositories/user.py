@@ -1,6 +1,7 @@
 
 from sqlalchemy import update, insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
 
 from src.models.user import User
 from src.schemas.user import UserInSchema, UserInOptionalSchema
@@ -36,7 +37,10 @@ class UserCrudRepository:
         """
 
         query = (
-            select(User).where(User.id == user_id)
+            select(User)
+            .options(joinedload(User.blogs))
+            .options(joinedload(User.blog))
+            .where(User.id == user_id)
         )
         result = await session.execute(query)
         user = result.unique().scalar_one_or_none()
@@ -60,9 +64,9 @@ class UserCrudRepository:
             .returning(User)
         )
         result = await session.execute(query)
-        updated_user = result.scalar()
+        await session.commit()
 
-        return updated_user
+        return result.scalar()
 
     @classmethod
     async def delete(cls, delete_user: User, session: AsyncSession) -> None:

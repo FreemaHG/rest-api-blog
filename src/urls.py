@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 
 from src.routes.user import router as user_routes
+from src.routes.subscribe import router as subscribe_router
 
 
 def register_routers(app: FastAPI) -> FastAPI:
@@ -9,5 +10,6 @@ def register_routers(app: FastAPI) -> FastAPI:
     """
 
     app.include_router(user_routes)
+    app.include_router(subscribe_router)
 
     return app

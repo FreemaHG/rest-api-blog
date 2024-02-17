@@ -41,10 +41,11 @@ async def create_user(
         200: {'model': UserOutSchema},
         404: {'model': ResponseSchema},
     },
+    status_code=200,
 )
 async def get_user(
     user_id: int,
-    session: AsyncSession = Depends(get_async_session),
+    session: AsyncSession = Depends(get_async_session)
 ):
     """
     Роут для вывода пользователя по id
@@ -64,11 +65,12 @@ async def get_user(
         200: {'model': UserOutSchema},
         404: {'model': ResponseSchema},
     },
+    status_code=200,
 )
 async def update_user(
     user_id: int,
     data: UserInOptionalSchema,
-    session: AsyncSession = Depends(get_async_session),
+    session: AsyncSession = Depends(get_async_session)
 ):
     """
     Роут для обновления пользователя по id
@@ -77,7 +79,7 @@ async def update_user(
     updated_user = await UserService.update(
         user_id=user_id,
         data=data,
-        session=session
+        session = session
     )
 
     if not updated_user:
@@ -94,10 +96,11 @@ async def update_user(
         200: {'model': ResponseSchema},
         404: {'model': ResponseSchema},
     },
+    status_code=200,
 )
 async def delete_user(
     user_id: int,
-    session: AsyncSession = Depends(get_async_session),
+    session: AsyncSession = Depends(get_async_session)
 ):
     """
     Роут для удаления пользователя по id
