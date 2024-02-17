@@ -3,6 +3,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship, backref
 
 from src.database import Base
 from src.models.blog import Blog
+from src.models.feed import Feed
 
 
 subscriptions = Table(
@@ -22,4 +23,5 @@ class User(Base):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True, index=True)
     username: Mapped[str] = mapped_column(String(60), nullable=False, unique=True, index=True)
     blog: Mapped["Blog"] = relationship('Blog', backref=backref('user', uselist=False), cascade='all, delete')
+    feed: Mapped["Feed"] = relationship('Feed', backref=backref('user', uselist=False), cascade='all, delete')
     blogs = relationship('Blog', secondary=subscriptions, backref='followers')

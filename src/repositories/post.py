@@ -42,9 +42,8 @@ class PostCrudRepository:
         :return: объект поста, если найден, иначе None
         """
 
-        query = (
-            select(Post).where(Post.id == post_id)
-        )
+        query = select(Post).where(Post.id == post_id)
+
         result = await session.execute(query)
         user = result.unique().scalar_one_or_none()
 
@@ -60,12 +59,8 @@ class PostCrudRepository:
         :return: обновленный объект поста, если найден, иначе None
         """
 
-        query = (
-            update(Post)
-            .where(Post.id == post_id)
-            .values(data.model_dump(exclude_unset=True))
-            .returning(Post)
-        )
+        query = update(Post).where(Post.id == post_id).values(data.model_dump(exclude_unset=True)).returning(Post)
+
         result = await session.execute(query)
         await session.commit()
 
@@ -100,9 +95,8 @@ class PostListRepository:
         :return: список постов иначе None
         """
 
-        query = (
-            select(Post).where(Post.blog_id == blog_id)
-        )
+        query = select(Post).where(Post.blog_id == blog_id)
+
         result = await session.execute(query)
         posts = result.unique().scalars().all()
 

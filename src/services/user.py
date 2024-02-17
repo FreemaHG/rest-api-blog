@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.models.user import User
 from src.repositories.blog import BlogRepository
+from src.repositories.feed import FeedRepository
 from src.repositories.user import UserCrudRepository
 from src.schemas.user import UserInSchema, UserInOptionalSchema
 from src.utils.exceptions import CustomApiException
@@ -35,7 +36,7 @@ class UserService:
             )
 
         await BlogRepository.create(user_id=user.id, session=session)
-        # TODO Создать персональную ленту
+        await FeedRepository.create(user_id=user.id, session=session)
 
         return user
 

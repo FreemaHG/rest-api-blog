@@ -3,6 +3,7 @@ from typing import List
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.business.news_feed import NewsFeedBusiness
 from src.models.post import Post
 from src.repositories.blog import BlogRepository
 from src.repositories.post import PostCrudRepository, PostListRepository
@@ -23,7 +24,11 @@ class PostService:
         :param session: объект асинхронной сессии
         :return: новый пост
         """
+
         post = await PostCrudRepository.create(blog_id=blog_id, new_post=new_post, session=session)
+
+        # TODO Вынести в фон через Celery
+        await NewsFeedBusiness.add_new(blog_id=blog_id, post=post, session=session)
 
         return post
 
