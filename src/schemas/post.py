@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import Field, field_validator
 
 from src.schemas.base import BaseOutSchema, OptionalBaseSchema
 
@@ -23,7 +23,7 @@ class PostOutSchema(BaseOutSchema, PostInSchema):
     Схема для вывода поста
     """
 
-    blog_id: int
+    # blog_id: int
     created_at: str
 
     @field_validator('created_at', mode='before')

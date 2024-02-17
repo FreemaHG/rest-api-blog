@@ -20,7 +20,6 @@ router = BlogAPIRouter(tags=['user'])
     responses={
         201: {'model': UserOutSchema},
     },
-    status_code=201,
 )
 async def create_user(
     new_user: UserInSchema,
@@ -41,7 +40,6 @@ async def create_user(
         200: {'model': UserOutSchema},
         404: {'model': ResponseSchema},
     },
-    status_code=200,
 )
 async def get_user(
     user_id: int,
@@ -65,7 +63,6 @@ async def get_user(
         200: {'model': UserOutSchema},
         404: {'model': ResponseSchema},
     },
-    status_code=200,
 )
 async def update_user(
     user_id: int,
@@ -96,7 +93,6 @@ async def update_user(
         200: {'model': ResponseSchema},
         404: {'model': ResponseSchema},
     },
-    status_code=200,
 )
 async def delete_user(
     user_id: int,
