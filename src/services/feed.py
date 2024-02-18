@@ -1,3 +1,4 @@
+from loguru import logger
 from sqlalchemy import Select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -39,7 +40,10 @@ class FeedService:
 
         mailing_list = await FeedListRepository.get_list()
 
-        await Newsletter.mailing(mailing_list=mailing_list)
+        if mailing_list:
+            await Newsletter.mailing(mailing_list=mailing_list)
+        else:
+            logger.warning("Нет пользователей для рассылки")
 
     @classmethod
     async def read(cls,  user_id: int, post_id: int, session: AsyncSession) -> bool:

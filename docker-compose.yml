@@ -2,6 +2,31 @@ version: "3.11"
 
 services:
 
+    nginx:
+      build: nginx
+      container_name: nginx
+      ports:
+        - 80:80
+        - 443:443
+      depends_on:
+        - api
+
+    api:
+      build:
+        context: .
+      env_file:
+        - .env
+      container_name: api
+      restart: on-failure
+      expose:
+        - 8000
+      ports:
+        - 8000:8000
+      command: [ "/docker/api.sh" ]
+      depends_on:
+        db:
+          condition: service_healthy
+
     db:
       image: postgres:15.1-alpine
       container_name: db
@@ -17,6 +42,33 @@ services:
         - POSTGRES_DB=${DB_NAME:?err}
       volumes:
         - postgres_db:/var/lib/postgresql/data
+      healthcheck:
+        test: [ "CMD-SHELL", "pg_isready", "-U", "postgres" ]
+        interval: 5s
+        timeout: 5s
+        retries: 5
+
+    celery_worker:
+      build:
+        context: .
+      env_file:
+        - .env
+      container_name: celery_worker
+      command: [ "/docker/celery.sh", "worker" ]
+      depends_on:
+        - api
+        - rabbitmq
+
+    celery_beat:
+      build:
+        context: .
+      env_file:
+        - .env
+      container_name: celery_beat
+      command: [ "/docker/celery.sh", "beat" ]
+      depends_on:
+        - rabbitmq
+        - celery_worker
 
     rabbitmq:
       image: rabbitmq:3.10.7-management

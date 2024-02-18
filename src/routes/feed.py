@@ -1,8 +1,8 @@
 from http import HTTPStatus
 
-from fastapi import Depends
-from fastapi_pagination import Page
+from fastapi import Depends, Query
 from fastapi_pagination.ext.sqlalchemy import paginate
+from fastapi_pagination import Page
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database import get_async_session
@@ -15,6 +15,10 @@ from src.utils.exceptions import CustomApiException
 
 router = BlogAPIRouter(tags=['feed'])
 
+# По умолчанию пагинация по 10 записей, максимум 500 записей
+Page = Page.with_custom_options(
+    size=Query(10, ge=1, le=500),
+)
 
 @router.get(
     '/users/{user_id}/feed',
@@ -29,7 +33,7 @@ async def get_feed(
     session: AsyncSession = Depends(get_async_session),
 ):
     """
-    Роут для вывода ленты новостей пользователя с пагинацией по умолчанию по 10 записей
+    Роут для вывода ленты новостей пользователя с пагинацией
     """
 
     query = await FeedService.get_list(user_id=user_id, session=session)

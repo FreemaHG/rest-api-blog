@@ -1,6 +1,7 @@
 import asyncio
 
 from celery import Celery
+from celery.schedules import crontab
 
 from src.business.news_feed import NewsFeedBusiness
 from src.config import RABBITMQ_HOST, RABBITMQ_PASS, RABBITMQ_USER
@@ -15,12 +16,11 @@ celery.conf.timezone = 'Europe/London'
 @celery.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
     """
-    Периодические задачи
+    Рассылка новостей
     """
 
-    # TODO Поменять время
     sender.add_periodic_task(
-        10,
+        crontab(hour=12, minute=00),
         sending_out_latest_news.s(),
         name='Get last 5 posts from news feed'
     )
@@ -50,7 +50,3 @@ def sending_out_latest_news():
     loop.run_until_complete(
         FeedService.get_last_news()
     )
-
-
-if __name__ == '__main__':
-    asyncio.run(FeedService.get_last_news())
