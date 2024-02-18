@@ -1,7 +1,5 @@
-from typing import List
-
 from loguru import logger
-from sqlalchemy import select, update
+from sqlalchemy import select, update, Select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
@@ -27,7 +25,7 @@ class NewsFeedBusiness:
         logger.debug("Запуск процесса обновления лент подписчиков")
 
         # id подписчиков блога, куда был добавлен пост
-        subquery = select(subscriptions.c.user_id).where(subscriptions.c.blog_id==blog_id)
+        subquery = select(subscriptions.c.user_id).where(subscriptions.c.blog_id == blog_id)
         # id лент для добавления новости
         query = select(Feed).options(joinedload(Feed.news)).filter(Feed.user_id.in_(subquery))
 
@@ -38,31 +36,22 @@ class NewsFeedBusiness:
         for feed in feeds_list:
             feed.news.append(post)
 
-            # TODO Проверить!!!
-            # Ограничение в 500 записей в ленте пользователя
-            if len(feed.news) > 500:
-                feed.news = feed.news[:500]
-
         await session.commit()
         logger.info(f"Все ленты подписчиков обновлены")
 
     @classmethod
-    async def get_news(cls, feed: Feed, session: AsyncSession) -> List[Post] | None:
+    async def query_for_get_news(cls, feed: Feed) -> Select:
         """
-        Вывод непрочитанных постов в ленту пользователя
+        Возврат select-запроса на извлечение непрочитанных постов в ленту пользователя (для пагинатора в роуте)
         :param feed: объект ленты
-        :param session: объект асинхронной сессии
-        :return: список непрочитанных постов
+        :return: select-запрос к БД
         """
         subquery = select(users_news_feed.c.post_id)\
             .where(users_news_feed.c.feed_id == feed.id, users_news_feed.c.read == False)
 
-        query = select(Post).where(Post.id.in_(subquery))
+        query = select(Post).where(Post.id.in_(subquery)).order_by(Post.created_at.desc()).limit(500)
 
-        result = await session.execute(query)
-        posts = result.unique().scalars().all()
-
-        return list(posts)
+        return query
 
     @classmethod
     async def mark_as_read(cls, feed_id: int, post_id: int, session: AsyncSession) -> None:

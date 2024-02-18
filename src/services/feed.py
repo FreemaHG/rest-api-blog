@@ -1,9 +1,7 @@
-from typing import List, Union
-
+from sqlalchemy import Select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.business.news_feed import NewsFeedBusiness
-from src.models.post import Post
 from src.repositories.feed import FeedRepository
 
 
@@ -13,7 +11,7 @@ class FeedService:
     """
 
     @classmethod
-    async def get_list(cls, user_id: int, session: AsyncSession) -> Union[List[Post], bool, None]:
+    async def get_list(cls, user_id: int, session: AsyncSession) -> Select | bool:
         """
         Вывод новостей пользователя в ленту
         :param user_id: id пользователя
@@ -26,9 +24,9 @@ class FeedService:
         if not feed:
             return False
 
-        news = await NewsFeedBusiness.get_news(feed=feed, session=session)
+        query = await NewsFeedBusiness.query_for_get_news(feed=feed)
 
-        return news
+        return query
 
     @classmethod
     async def read(cls,  user_id: int, post_id: int, session: AsyncSession) -> bool:
