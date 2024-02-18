@@ -2,7 +2,9 @@ from sqlalchemy import Select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.business.news_feed import NewsFeedBusiness
-from src.repositories.feed import FeedRepository
+from src.business.newsletter import Newsletter
+from src.business.post import PostBusiness
+from src.repositories.feed import FeedRepository, FeedListRepository
 
 
 class FeedService:
@@ -29,6 +31,17 @@ class FeedService:
         return query
 
     @classmethod
+    async def get_last_news(cls) -> None:
+        """
+        Рассылка пользователям последних новостей из ленты
+        :return: None
+        """
+
+        mailing_list = await FeedListRepository.get_list()
+
+        await Newsletter.mailing(mailing_list=mailing_list)
+
+    @classmethod
     async def read(cls,  user_id: int, post_id: int, session: AsyncSession) -> bool:
         """
         Отметить пост в ленте пользователя прочитанным
@@ -43,6 +56,6 @@ class FeedService:
         if not feed:
             return False
 
-        await NewsFeedBusiness.mark_as_read(feed_id=feed.id, post_id=post_id, session=session)
+        await PostBusiness.mark_as_read(feed_id=feed.id, post_id=post_id, session=session)
 
         return True

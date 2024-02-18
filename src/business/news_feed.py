@@ -1,11 +1,11 @@
 from typing import List
 
 from loguru import logger
-from sqlalchemy import select, update, Select
+from sqlalchemy import select, Select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
-from src.database import async_session_maker, get_async_session
+from src.database import async_session_maker
 from src.models.feed import Feed, users_news_feed
 from src.models.post import Post
 from src.models.user import subscriptions
@@ -72,20 +72,3 @@ class NewsFeedBusiness:
         query = select(Post).where(Post.id.in_(subquery)).order_by(Post.created_at.desc()).limit(500)
 
         return query
-
-    @classmethod
-    async def mark_as_read(cls, feed_id: int, post_id: int, session: AsyncSession) -> None:
-        """
-        Отметить пост прочитанным
-        :param feed_id: id ленты новостей
-        :param post_id: id поста
-        :param session: объект асинхронной сессии
-        :return: None
-        """
-
-        query = update(users_news_feed)\
-            .where(users_news_feed.c.feed_id == feed_id, users_news_feed.c.post_id == post_id)\
-            .values(read=True)
-
-        await session.execute(query)
-        await session.commit()

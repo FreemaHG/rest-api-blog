@@ -1,7 +1,10 @@
+from typing import List
+
 from sqlalchemy import insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
+from src.database import async_session_maker
 from src.models.feed import Feed
 
 
@@ -39,3 +42,22 @@ class FeedRepository:
         feed = result.unique().scalar_one_or_none()
 
         return feed
+
+class FeedListRepository:
+    """
+    Вывод всех новостных лент
+    """
+
+    @classmethod
+    async def get_list(cls) -> List[Feed]:
+        """
+        Возврат всех новостных лент пользователей (для рассылки)
+        :return: список лент
+        """
+
+        async with async_session_maker() as session:
+            query = select(Feed).options(joinedload(Feed.news)).options(joinedload(Feed.user))
+            result = await session.execute(query)
+            feeds = result.unique().scalars()
+
+            return list(feeds)

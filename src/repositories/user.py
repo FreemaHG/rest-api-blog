@@ -1,10 +1,10 @@
-from typing import List
-
 from sqlalchemy import update, insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
-from src.models.blog import Blog
+from src.database import async_session_maker
+from src.models.feed import Feed, users_news_feed
+from src.models.post import Post
 from src.models.user import User
 from src.schemas.user import UserInSchema, UserInOptionalSchema
 
