@@ -1,9 +1,15 @@
+from http import HTTPStatus
+
 from loguru import logger
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.models.user import User
+from src.repositories.blog import BlogRepository
+from src.repositories.feed import FeedRepository
 from src.repositories.user import UserCrudRepository
 from src.schemas.user import UserInSchema, UserInOptionalSchema
+from src.utils.exceptions import CustomApiException
 
 
 class UserService:
@@ -19,11 +25,18 @@ class UserService:
         :param session: объект асинхронной сессии
         :return: новый пользователь
         """
-        user = await UserCrudRepository.create(new_user=new_user, session=session)
 
-        # TODO Обернуть в одну транзакцию!!!
-        # TODO Создать блог
-        # TODO Создать персональную ленту
+        try:
+            user = await UserCrudRepository.create(new_user=new_user, session=session)
+
+        except IntegrityError:
+            logger.error(f"Логин {new_user.username} уже используется")
+            raise CustomApiException(
+                status_code=HTTPStatus.LOCKED, detail='The username is already in use'
+            )
+
+        await BlogRepository.create(user_id=user.id, session=session)
+        await FeedRepository.create(user_id=user.id, session=session)
 
         return user
 
@@ -67,7 +80,6 @@ class UserService:
 
         if delete_user:
             await UserCrudRepository.delete(delete_user=delete_user, session=session)
-
             return True
 
         logger.error('Меню не найдено!')

@@ -1,7 +1,10 @@
-
 from sqlalchemy import update, insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
 
+from src.database import async_session_maker
+from src.models.feed import Feed, users_news_feed
+from src.models.post import Post
 from src.models.user import User
 from src.schemas.user import UserInSchema, UserInOptionalSchema
 
@@ -35,9 +38,8 @@ class UserCrudRepository:
         :return: объект пользователя, если найден, иначе None
         """
 
-        query = (
-            select(User).where(User.id == user_id)
-        )
+        query = select(User).options(joinedload(User.blogs)).options(joinedload(User.blog)).where(User.id == user_id)
+
         result = await session.execute(query)
         user = result.unique().scalar_one_or_none()
 
@@ -53,16 +55,12 @@ class UserCrudRepository:
         :return: обновленный объект пользователя, если найден, иначе None
         """
 
-        query = (
-            update(User)
-            .where(User.id == user_id)
-            .values(data.model_dump(exclude_unset=True))
-            .returning(User)
-        )
-        result = await session.execute(query)
-        updated_user = result.scalar()
+        query = update(User).where(User.id == user_id).values(data.model_dump(exclude_unset=True)).returning(User)
 
-        return updated_user
+        result = await session.execute(query)
+        await session.commit()
+
+        return result.scalar()
 
     @classmethod
     async def delete(cls, delete_user: User, session: AsyncSession) -> None:
