@@ -1,11 +1,15 @@
+from typing import List
+
 from loguru import logger
 from sqlalchemy import select, update, Select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
+from src.database import async_session_maker, get_async_session
 from src.models.feed import Feed, users_news_feed
 from src.models.post import Post
 from src.models.user import subscriptions
+from src.repositories.post import PostCrudRepository
 
 
 class NewsFeedBusiness:
@@ -14,15 +18,13 @@ class NewsFeedBusiness:
     """
 
     @classmethod
-    async def add_new(cls, blog_id: int, post: Post, session: AsyncSession) -> None:
+    async def __search_feeds(cls, blog_id: int, session: AsyncSession) -> List[Feed] | None:
         """
-        Добавление новости в ленту подписчикам
-        :param blog_id: id блога, куда была добавлена новость
-        :param post: новый пост
+        Поиск новостных лент пользователей, подписанных на указанный блог
+        :param blog_id: id блога
         :param session: объект асинхронной сессии
-        :return: None
+        :return: список лент пользователей
         """
-        logger.debug("Запуск процесса обновления лент подписчиков")
 
         # id подписчиков блога, куда был добавлен пост
         subquery = select(subscriptions.c.user_id).where(subscriptions.c.blog_id == blog_id)
@@ -31,13 +33,31 @@ class NewsFeedBusiness:
 
         result = await session.execute(query)
         feeds_list = result.unique().scalars().all()
-        logger.debug(f"Пост №{post.id} требует добавления в {len(feeds_list)} лент")
 
-        for feed in feeds_list:
-            feed.news.append(post)
+        return list(feeds_list)
 
-        await session.commit()
-        logger.info(f"Все ленты подписчиков обновлены")
+    @classmethod
+    async def add_new(cls, blog_id: int, post_id: int) -> None:
+        """
+        Добавление новости в ленту подписчикам
+        :param blog_id: id блога, куда была добавлена новость
+        :param post_id: id нового поста
+        :return: None
+        """
+        logger.debug("Запуск процесса обновления лент подписчиков")
+
+        async with async_session_maker() as session:
+
+            post = await PostCrudRepository.get(post_id=post_id, session=session)
+
+            feeds_list = await cls.__search_feeds(blog_id=blog_id, session=session)
+            logger.debug(f"Пост №{post.id} требует добавления в {len(feeds_list)} новостные ленты")
+
+            for feed in feeds_list:
+                feed.news.append(post)
+
+            await session.commit()
+            logger.info(f"Все ленты подписчиков обновлены")
 
     @classmethod
     async def query_for_get_news(cls, feed: Feed) -> Select:

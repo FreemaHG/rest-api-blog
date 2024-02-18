@@ -20,5 +20,5 @@ class Feed(Base):
     __tablename__ = 'feed'
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True, index=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
-    news = relationship('Post', secondary=users_news_feed)
+    user_id: Mapped[int] = mapped_column(ForeignKey('user.id'))
+    news = relationship('Post', secondary=users_news_feed, back_populates='feeds')

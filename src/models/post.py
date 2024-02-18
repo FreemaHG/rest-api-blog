@@ -18,5 +18,4 @@ class Post(Base):
     text: Mapped[str] = mapped_column(String(140))
     created_at: Mapped[datetime.datetime] = mapped_column(default=datetime.datetime.utcnow)
     blog_id: Mapped[int] = mapped_column(ForeignKey("blog.id"))
-    # TODO Предупреждение с этой строкой, протестить все url перед удалением!!!
-    # feeds = relationship('Feed', secondary='users_news_feed')
+    feeds = relationship('Feed', secondary='users_news_feed', back_populates='news')

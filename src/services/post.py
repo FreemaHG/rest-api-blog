@@ -3,11 +3,11 @@ from typing import List
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.business.news_feed import NewsFeedBusiness
 from src.models.post import Post
 from src.repositories.blog import BlogRepository
 from src.repositories.post import PostCrudRepository, PostListRepository
 from src.schemas.post import PostInSchema, PostInOptionalSchema
+from src.tasks.tasks import update_news_feeds
 
 
 class PostService:
@@ -27,8 +27,8 @@ class PostService:
 
         post = await PostCrudRepository.create(blog_id=blog_id, new_post=new_post, session=session)
 
-        # TODO Вынести в фон через Celery
-        await NewsFeedBusiness.add_new(blog_id=blog_id, post=post, session=session)
+        # Добавление новости в ленту подписчикам в фоне через Celery
+        update_news_feeds.delay(blog_id=blog_id, post_id=post.id)
 
         return post
 
